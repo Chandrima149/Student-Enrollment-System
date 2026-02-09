@@ -337,7 +337,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast";
 // import Link from "next/link"; // ← Add this if using Next.js
 import { Link } from "react-router-dom";
-
+import { DocumentUpload } from "@/components/DocumentUpload.tsx"; 
 
 const enrollmentSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -666,20 +666,70 @@ const handleMockPayment = async (outcome: "success" | "failed") => {
     );
   }
 
- if (step === "success") {
+//  if (step === "success") {
+//   return (
+//     <Card className="max-w-2xl mx-auto">
+//       <CardContent className="pt-16 pb-12 text-center">
+//         <div className="w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-8">
+//           <CheckCircle className="w-14 h-14 text-emerald-500" />
+//         </div>
+//         <h3 className="text-3xl font-bold mb-4">Welcome Aboard!</h3>
+//         <p className="text-xl text-muted-foreground mb-6">
+//           Enrollment ID: <strong>{enrollmentData?.enrollmentId || "ALGO-XXXXXX"}</strong>
+//         </p>
+//         <p className="text-muted-foreground mb-10 max-w-md mx-auto">
+//   Your journey in {getProgramDisplayName(enrollmentData?.program || '')} program is now active.
+// </p>
+
+//         <div className="flex flex-col sm:flex-row gap-4 justify-center">
+//           <Button asChild size="lg">
+//             <Link to="/dashboard">
+//               Go to Student Dashboard
+//             </Link>
+//           </Button>
+
+//           <Button 
+//             variant="outline" 
+//             size="lg"
+//             onClick={() => setStep("form")}
+//           >
+//             Submit Another Application
+//           </Button>
+//         </div>
+//       </CardContent>
+//     </Card>
+//   );
+// }
+
+if (step === "success") {
   return (
     <Card className="max-w-2xl mx-auto">
       <CardContent className="pt-16 pb-12 text-center">
         <div className="w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-8">
           <CheckCircle className="w-14 h-14 text-emerald-500" />
         </div>
+
         <h3 className="text-3xl font-bold mb-4">Welcome Aboard!</h3>
+
         <p className="text-xl text-muted-foreground mb-6">
           Enrollment ID: <strong>{enrollmentData?.enrollmentId || "ALGO-XXXXXX"}</strong>
         </p>
+
         <p className="text-muted-foreground mb-10 max-w-md mx-auto">
-  Your journey in {getProgramDisplayName(enrollmentData?.program || '')} program is now active.
-</p>
+          Your journey in {getProgramDisplayName(enrollmentData?.program || '')} program is now active.
+        </p>
+
+        {/* ──────────────────────────────────────────────── */}
+        {/* ADD THE UPLOAD SECTION HERE */}
+        <div className="mt-10 mb-10">
+          <h4 className="text-xl font-semibold mb-6">Complete Your Profile</h4>
+          <p className="text-muted-foreground mb-6">
+            Please upload your documents (Aadhaar, marksheet, resume, etc.) to finish onboarding.
+          </p>
+
+          <DocumentUpload studentId={enrollmentData?._id || ""} />
+        </div>
+        {/* ──────────────────────────────────────────────── */}
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button asChild size="lg">

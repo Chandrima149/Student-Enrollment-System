@@ -167,6 +167,17 @@ import testimonialsRouter from "./routes/testimonials.js";
 import successStoriesRouter from "./routes/successStories.js";
 
 dotenv.config();
+import { v2 as cloudinary } from "cloudinary";
+
+// Load Cloudinary config from .env
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Optional: Confirm it's working (you'll see this in terminal)
+console.log("Cloudinary configured successfully ✅");
 
 const app = express();
 
@@ -176,10 +187,10 @@ const app = express();
 //   credentials: true,
 // }));
 app.use(cors({
-  origin: "http://localhost:8080",  // ← YOUR ACTUAL FRONTEND PORT
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  origin: true,  // ← allows ANY origin (temporary for development)
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 app.use(express.json());
 

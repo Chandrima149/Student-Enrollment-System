@@ -521,20 +521,167 @@
 // export default router;
 
 
+// import express from "express";
+// import Student from "../models/Student.js";
+
+// const router = express.Router();
+
+// router.post("/", async (req, res) => {
+//   console.log("ENROLL POST RECEIVED", req.body);
+
+//   try {
+//     const data = req.body;
+
+//     const student = await Student.create({
+//       ...data,
+//       tier: "Beginner", // or your logic
+//       paymentStatus: "pending",
+//       enrollmentStatus: "pending",
+//     });
+
+//     console.log("Student created:", student._id);
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Enrollment successful",
+//       student: student.toObject(), // send full student
+//     });
+//   } catch (err) {
+//     console.error("ENROLL ERROR:", err);
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// });
+
+// router.post("/confirm-payment", async (req, res) => {
+//   console.log("CONFIRM-PAYMENT RECEIVED", req.body);
+
+//   try {
+//     const { studentId, enrollmentId } = req.body;
+
+//     if (!studentId && !enrollmentId) {
+//       return res.status(400).json({ success: false, message: "ID required" });
+//     }
+
+//     const student = await Student.findOneAndUpdate(
+//       { $or: [{ _id: studentId }, { enrollmentId }] },
+//       {
+//         paymentStatus: "paid",
+//         enrollmentStatus: "enrolled",
+//         paidAt: new Date(),
+//       },
+//       { new: true }
+//     );
+
+//     if (!student) {
+//       return res.status(404).json({ success: false, message: "Student not found" });
+//     }
+
+//     res.json({
+//       success: true,
+//       message: "Payment confirmed",
+//       student: student.toObject(),
+//     });
+//   } catch (err) {
+//     console.error("CONFIRM-PAYMENT ERROR:", err);
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// });
+
+// export default router;
+
+// import multer from "multer";
+
+// // Multer setup: store uploaded files temporarily on disk
+// const upload = multer({ dest: "uploads/" });
+
+// // Route for uploading multiple documents
+// router.post("/upload-documents", upload.array("documents", 5), async (req, res) => {
+//   try {
+//     const { studentId } = req.body;
+//     const files = req.files;
+
+//     if (!studentId) {
+//       return res.status(400).json({ success: false, message: "Student ID required" });
+//     }
+
+//     if (!files || files.length === 0) {
+//       return res.status(400).json({ success: false, message: "No files uploaded" });
+//     }
+
+//     // Upload each file to Cloudinary
+//     const uploadedDocs = [];
+
+//     for (const file of files) {
+//       const result = await cloudinary.uploader.upload(file.path, {
+//         folder: "algoascend/students",  // organizes files in Cloudinary
+//         resource_type: "auto",          // auto-detects PDF/image/etc.
+//       });
+
+//       // Delete temp file from disk
+//       require("fs").unlinkSync(file.path);
+
+//       uploadedDocs.push({
+//         type: "document",                 // you can make this dynamic later
+//         url: result.secure_url,
+//         originalName: file.originalname,
+//         uploadedAt: new Date(),
+//         verified: false,
+//       });
+//     }
+
+//     // Add uploaded documents to student's record
+//     const student = await Student.findByIdAndUpdate(
+//       studentId,
+//       { $push: { documents: { $each: uploadedDocs } } },
+//       { new: true }
+//     );
+
+//     if (!student) {
+//       return res.status(404).json({ success: false, message: "Student not found" });
+//     }
+
+//     res.json({
+//       success: true,
+//       message: "Documents uploaded successfully",
+//       documents: student.documents,
+//     });
+//   } catch (err) {
+//     console.error("Upload error:", err);
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// });
+
 import express from "express";
 import Student from "../models/Student.js";
+import multer from "multer";
+import { v2 as cloudinary } from "cloudinary"; 
+import fs from "fs/promises";
 
 const router = express.Router();
 
+// Multer setup: temporary storage for uploaded files
+const upload = multer({ dest: "uploads/" });
+
+// Main enrollment route
 router.post("/", async (req, res) => {
   console.log("ENROLL POST RECEIVED", req.body);
 
   try {
     const data = req.body;
 
+    // Optional: add tier logic if you want
+    let tier = "Beginner";
+    if (
+      data.education === "Graduate" ||
+      data.education === "Post Graduate" ||
+      data.status === "working"
+    ) {
+      tier = "Advanced";
+    }
+
     const student = await Student.create({
       ...data,
-      tier: "Beginner", // or your logic
+      tier,
       paymentStatus: "pending",
       enrollmentStatus: "pending",
     });
@@ -544,7 +691,7 @@ router.post("/", async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Enrollment successful",
-      student: student.toObject(), // send full student
+      student: student.toObject(),
     });
   } catch (err) {
     console.error("ENROLL ERROR:", err);
@@ -552,6 +699,7 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Mock payment confirmation
 router.post("/confirm-payment", async (req, res) => {
   console.log("CONFIRM-PAYMENT RECEIVED", req.body);
 
@@ -583,6 +731,118 @@ router.post("/confirm-payment", async (req, res) => {
     });
   } catch (err) {
     console.error("CONFIRM-PAYMENT ERROR:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Document upload route (this is the one that was crashing)
+// router.post("/upload-documents", upload.array("documents", 5), async (req, res) => {
+//   try {
+//     const { studentId } = req.body;
+//     const files = req.files;
+
+//     if (!studentId) {
+//       return res.status(400).json({ success: false, message: "Student ID required" });
+//     }
+
+//     if (!files || files.length === 0) {
+//       return res.status(400).json({ success: false, message: "No files uploaded" });
+//     }
+
+//     const uploadedDocs = [];
+
+//     for (const file of files) {
+//       // 
+//       const result = await cloudinary.uploader.upload(file.path, {
+//   folder: "algoascend/students",
+//   resource_type: "auto",
+//   upload_preset: "student-unsign"  
+// });
+
+//       // Delete temporary file
+//       require("fs").unlinkSync(file.path);
+
+//       uploadedDocs.push({
+//         type: "document",
+//         url: result.secure_url,
+//         originalName: file.originalname,
+//         uploadedAt: new Date(),
+//         verified: false,
+//       });
+//     }
+
+//     const student = await Student.findByIdAndUpdate(
+//       studentId,
+//       { $push: { documents: { $each: uploadedDocs } } },
+//       { new: true }
+//     );
+
+//     if (!student) {
+//       return res.status(404).json({ success: false, message: "Student not found" });
+//     }
+
+//     res.json({
+//       success: true,
+//       message: "Documents uploaded successfully",
+//       documents: student.documents,
+//     });
+//   } catch (err) {
+//     console.error("Upload error:", err);
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// });
+
+router.post("/upload-documents", upload.array("documents", 5), async (req, res) => {
+  try {
+    const { studentId } = req.body;
+    const files = req.files;
+
+    if (!studentId) {
+      return res.status(400).json({ success: false, message: "Student ID required" });
+    }
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({ success: false, message: "No files uploaded" });
+    }
+
+    const uploadedDocs = [];
+
+    for (const file of files) {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: "algoascend/students",
+        resource_type: "auto",
+        upload_preset: "student-unsign"
+      });
+
+      // FIXED: use ESM fs.unlink (async, no require)
+      await fs.unlink(file.path);
+
+      uploadedDocs.push({
+        type: "document",
+        url: result.secure_url,
+        originalName: file.originalname,
+        uploadedAt: new Date(),
+        verified: false,
+      });
+    }
+
+    const student = await Student.findByIdAndUpdate(
+      studentId,
+      { $push: { documents: { $each: uploadedDocs } } },
+      { new: true }
+    );
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Documents uploaded successfully",
+      documents: student.documents,
+    });
+  } catch (err) {
+    console.error("Upload error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
