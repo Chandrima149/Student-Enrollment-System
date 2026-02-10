@@ -848,3 +848,115 @@ router.post("/upload-documents", upload.array("documents", 5), async (req, res) 
 });
 
 export default router;
+
+// Get all students for admin
+router.get("/admin/students", async (req, res) => {
+  try {
+    const students = await Student.find().sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      students,
+    });
+  } catch (err) {
+    console.error("Admin fetch error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Update lead status
+router.put("/admin/students/:id/status", async (req, res) => {
+  try {
+    const { status } = req.body;
+    const student = await Student.findByIdAndUpdate(
+      req.params.id,
+      { leadStatus: status },
+      { new: true }
+    );
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Status updated",
+      student,
+    });
+  } catch (err) {
+    console.error("Status update error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+
+// Update verification status of a specific document
+// router.put("/admin/students/:studentId/documents/:docId/verify", async (req, res) => {
+//   try {
+//     const { studentId, docId } = req.params;
+//     const { verified } = req.body; // true or false
+
+//     const student = await Student.findById(studentId);
+//     if (!student) {
+//       return res.status(404).json({ success: false, message: "Student not found" });
+//     }
+
+//     const doc = student.documents.id(docId);
+//     if (!doc) {
+//       return res.status(404).json({ success: false, message: "Document not found" });
+//     }
+
+//     doc.verified = verified;
+//     await student.save();
+
+//     res.json({
+//       success: true,
+//       message: `Document ${verified ? "verified" : "rejected"}`,
+//       student,
+//     });
+//   } catch (err) {
+//     console.error("Verify document error:", err);
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// });
+router.put("/admin/students/:studentId/documents/:docId/verify", async (req, res) => {
+  try {
+    const { studentId, docId } = req.params;
+    const { verified } = req.body;
+
+    console.log(`[VERIFY] Request received: studentId=${studentId}, docId=${docId}, verified=${verified}`);
+
+    if (!studentId || !docId || typeof verified !== "boolean") {
+      return res.status(400).json({ success: false, message: "Missing or invalid parameters" });
+    }
+
+    const student = await Student.findById(studentId);
+    if (!student) {
+      console.log(`[VERIFY] Student not found: ${studentId}`);
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    console.log(`[VERIFY] Student found, documents count: ${student.documents?.length || 0}`);
+
+    const doc = student.documents?.id(docId);
+    if (!doc) {
+      console.log(`[VERIFY] Document not found: docId=${docId}`);
+      return res.status(404).json({ success: false, message: "Document not found in student record" });
+    }
+
+    console.log(`[VERIFY] Document found, old verified: ${doc.verified}`);
+
+    doc.verified = verified;
+    await student.save();
+
+    console.log(`[VERIFY] Success - new verified: ${verified}`);
+
+    res.json({
+      success: true,
+      message: `Document ${verified ? "verified" : "rejected"}`,
+      student,
+    });
+  } catch (err) {
+    console.error("[VERIFY ERROR]", err.message, err.stack);
+    res.status(500).json({ success: false, message: "Server error during verification: " + err.message });
+  }
+});

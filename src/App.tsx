@@ -91,6 +91,8 @@ import Counseling from "./pages/Counseling";
 import NotFound from "./pages/NotFound";
 import { AdminPrograms } from "./pages/AdminPrograms";
 import Dashboard from "./pages/Dashboard";
+import { AdminStudents } from "./pages/AdminStudents";
+
 
 const queryClient = new QueryClient();
 
@@ -109,6 +111,7 @@ const App = () => (
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/admin/programs" element={<AdminPrograms />} />
         <Route path="*" element={<NotFound />} />
+        <Route path="/admin/students" element={<AdminStudents />} />
       </Routes>
 
     </TooltipProvider>

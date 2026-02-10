@@ -26,7 +26,7 @@ const StudentSchema = new mongoose.Schema(
     },
     leadStatus: {
       type: String,
-      enum: ["New", "Contacted", "Interested", "Enrolled", "Rejected"],
+      enum: ["New", "Contacted", "Interested", "Enrolled", "Rejected", "Approved", "On-Hold"],
       default: "New",
     },
 
